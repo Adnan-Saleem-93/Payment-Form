@@ -24,7 +24,7 @@ const PaymentMethod = () => {
 		<>
 			<Typography
 				sx={{
-					fontSize: pxToRem(36),
+					fontSize: pxToRem(30),
 					fontWeight: 600,
 					marginBottom: `${pxToRem(24)}`,
 				}}

@@ -1,64 +1,71 @@
-import { TextField, Typography } from "@mui/material";
-import { Fragment, useState } from "react";
+import { Controller } from "react-hook-form";
+import { form } from "../schemas/input-section";
+import Input from "./Form/Input";
+import { useCallback, useEffect, useState } from "react";
+import { Box, Typography } from "@mui/material";
 import { pxToRem } from "../utils/helper-functions";
 
-const InputSection = () => {
-	const [inputFields, setInputFields] = useState([
-		{
-			name: "location",
-			label: "Enter your location",
-			value: "",
-			placeholder: "Enter address",
-			required: true,
-			errorMessage: "Location is required",
-		},
-		{
-			name: "note",
-			label: "Note (optional)",
-			value: "",
-			placeholder: "Enter text here",
-		},
-	]);
+const InputSection = ({ values, errors, control }) => {
+	const [inputFields, setInputFields] = useState([]);
 
-	const handleChange = (e) => {
-		let updatedFields = [...inputFields];
-		let matchedItemIndex = updatedFields.findIndex(
-			(x) => x.name === e.target.name
-		);
-		if (matchedItemIndex > -1) {
-			updatedFields[matchedItemIndex].value = e.target.value;
+	const updateFields = useCallback(() => {
+		let updatedInputFields = [];
+		for (let field in form) {
+			let { name, type, label, placeholder } = form[field];
+			let value = values[name];
+			let error = errors ? errors[name] : null;
+			updatedInputFields.push({
+				name,
+				label,
+				placeholder,
+				value,
+				type,
+				error,
+			});
 		}
-		setInputFields(updatedFields);
-	};
 
-	return (
-		<>
-			{inputFields.map((field, index) => {
-				const { label, placeholder, value, name } = field;
-				return (
-					<Fragment key={index}>
-						<Typography sx={{ fontSize: pxToRem(22), fontWeight: 600 }}>
-							{label}
-						</Typography>
-						<TextField
-							sx={{
-								margin: `${pxToRem(16)} 0 ${pxToRem(24)} 0`,
-								borderRadius: `${pxToRem(12)} !important`,
-							}}
-							name={name}
-							fullWidth
-							placeholder={placeholder}
-							id="outlined-error"
-							value={value}
-							onChange={(event) => {
-								handleChange(event);
-							}}
-						/>
-					</Fragment>
-				);
-			})}
-		</>
-	);
+		setInputFields(updatedInputFields);
+	}, [values, errors]);
+
+	useEffect(() => {
+		updateFields();
+
+		return () => {
+			setInputFields([]);
+		};
+	}, [updateFields]);
+
+	return inputFields.map((input, index) => {
+		const { name, type, error, label, placeholder, value } = input;
+		return (
+			<Box key={index} sx={{ margin: `0 0 ${pxToRem(24)} 0` }}>
+				<Controller
+					name={name}
+					defaultValue={value}
+					control={control}
+					render={({ field }) => {
+						return (
+							type === "text" && (
+								<Input
+									{...field}
+									label={label}
+									name={name}
+									placeholder={placeholder}
+									error={error}
+								/>
+							)
+						);
+					}}
+				/>
+
+				{error && (
+					<Typography color="error" variant="caption">
+						{error.message}
+					</Typography>
+				)}
+			</Box>
+		);
+	});
 };
 
 export default InputSection;
